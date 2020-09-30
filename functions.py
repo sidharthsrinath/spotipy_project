@@ -1,66 +1,62 @@
 import spotipy
 import sys
 from spotipy.oauth2 import SpotifyClientCredentials
+import numpy as np
 
 spotify = spotipy.Spotify(auth_manager=SpotifyClientCredentials())
 
-def get_artist(name):
-    results = spotify.search(q='artist:' + name, type='artist')
+def get_songs(playlistname, playlistsongs, playlistuser): #evaluate songs from a list of songs
+    #complete for now
 
-    dict = results['artists']['items'][0]
-
-
-    for key in dict:
-        print(f'\n{key}: {dict[key]} \n')
-
-def get_song(name):
-    results = spotify.search(q = 'song: ' + name, type='song')
-
-    print(results)
-
-
-def get_album(id):
-    album = spotify.album(id)
-    
-    artist_name = album['artists'][0]['name']
-    genre = album['genres']
-    album_name = album['name']
-
-    print(album_name)
-    print(artist_name)
-    
-    # for key in album:
+    # for key in playlisttracks:
     #     print(key)
 
-    #return album_name, artist_name, artist_id
+    filename = 'tracks_'+playlistname+'.txt'
+    username = playlistuser['display_name']
 
-def get_playlist(id):
+    playlist_song_names = []
+    playlist_song_album_names = []
+    playlist_song_artist_names = []
+    playlist_song_ids = []
+
+    with open(filename, 'w') as tracktext:
+        tracktext.write(f'Playlist: {playlistname} \n')
+        for x,y in enumerate(playlistsongs):
+            #song name
+            songname = y['name']
+            playlist_song_names.append(songname)
+            #songs album name
+            albumname = y['album']['name']
+            playlist_song_album_names.append(albumname)
+            #songs artists name
+            artistname = y['artists'][0]['name']
+            playlist_song_artist_names.append(artistname)
+            #f'{x+1}. {song name}, {album name}, {artist name} \n'
+            tracktext.write(f'{x+1}. {songname}, {albumname}, {artistname} \n')
+   
+    song_info = list(zip(playlist_song_names, playlist_song_album_names, 
+        playlist_song_album_names, playlist_song_artist_names))
+
+def get_playlist(id): #extract and distribute info from a playlist to helper functions
+    #complete for right now
+
+    
     playlist = spotify.playlist(id)
+    
+    playlist_name = playlist['name']#playlist name
+    user = playlist['owner']#user who owns the playlist
+    tracks = playlist['tracks'] #only the first 100 tracks
 
-    # for key in playlist:
-    #     print(key)
+    all_tracks = tracks['items']
+    while tracks['next']: # getting the rest of the tracks from the playlist
+        tracks = spotify.next(tracks)
+        all_tracks.extend(tracks['items'])
+    
+    #creating a list of all the songs in the playlist
+    songs = [x['track'] for x in all_tracks]
 
-    playlist_name = playlist['name']
-    tracks = playlist['tracks']
-
-    # for key in tracks:
-    #     print(key)
-
-    with open('tracks.txt', 'w') as tracktext:
-        tracktext.write(f'Playlist: {playlist_name} \n')
-        for x,y in enumerate((tracks['items'])):
-            thistrack = y['track']
-            thisname = thistrack['name']
-            artist_name = thistrack['artists'][0]['name']
-            tracktext.write(f'{x+1}. {thisname} , {artist_name} \n')
-
-    # trackdict = tracks['items'][0]['track']['available_markets']
-    # print(trackdict)
-    # for key in trackdict:
-    #    print(key)
-
-            
+    return playlist_name, songs, user
 
 
-playlist_id = 'spotify:playlist:6q3k05ivbimSgEWvWnSStd'
-playlist = get_playlist(playlist_id)
+
+
