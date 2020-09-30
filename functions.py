@@ -1,63 +1,78 @@
 import spotipy
 import sys
 from spotipy.oauth2 import SpotifyClientCredentials
-import numpy as np
+import pandas as pd
+import os
 
 spotify = spotipy.Spotify(auth_manager=SpotifyClientCredentials())
 
-def get_songs(playlistname, playlistsongs, playlistuser): #evaluate songs from a list of songs
+def song_information(playlistname, playlistsongids, playlistuser): #evaluate songs from a list of songs
     #complete for now
 
-    filename = 'tracks_'+playlistname+'.txt'
     username = playlistuser['display_name']
+    headers = []
+    songdicts = []
 
-    playlist_song_names = []
-    playlist_song_album_names = []
-    playlist_song_artist_names = []
-    playlist_song_ids = []
-    playlist_song_genres = []
-
-
-    with open(filename, 'w') as tracktext:
-        tracktext.write(f'Playlist: {playlistname} \n')
-        tracktext.write(f'Owner: {username} \n')
-        for x,y in enumerate(playlistsongs):
-            #song id
-            songid = y['id']
-            playlist_song_ids.append(songid)
-            #song name
-            songname = y['name']
-            playlist_song_names.append(songname)
-            #songs album name
-            albumname = y['album']['name']
-            playlist_song_album_names.append(albumname)
-            #songs artists name
-            artistname = y['artists'][0]['name']
-            playlist_song_artist_names.append(artistname)
-            #songs artist's id
-            artistid = y['artists'][0]['id']
-            #song's genre
-            songgenres = get_song_genre(artistid)
-            playlist_song_genres.append(songgenres)
-            #f'{x+1}. {song name}, {album name}, {artist name} \n'
-            tracktext.write(f'{x+1}. {songname}, {albumname}, {artistname}, {songgenres} \n')
-   
-    song_info = list(zip(playlist_song_names, playlist_song_album_names, 
-        playlist_song_artist_names, playlist_song_ids,playlist_song_genres))
     
-    return song_info
+    for x,y in enumerate(playlistsongids):
+        #song id
+        songid = y
+        songdata = get_song_data(songid)
+        songfeatures = get_song_features(songid)
+        songdict = {**songdata, **songfeatures}
+        songdicts.append(songdict)
+    
+    for key in songdicts[0]:
+        headers.append(key)
 
-def get_song_genre(artist_id):
+    return songdicts, headers, [playlistname,username]
+            
+def get_song_genre(artist_id): #getting the genre of a song based on artist id
+    #complete for right now
     try:
         artist = spotify.artist(artist_id)#search for artist based on id to get exact result
         return artist['genres']
     except(AttributeError):
         pass
 
+def get_song_features(songid): #getting the data of a song (dancability, loudness, etc)
+    features = spotify.audio_features(songid)
+    features = features[0]
+
+    song_features = {
+    'danceability' : features['danceability'],
+    'energy' : features['energy'],
+    'key' : features['key'],
+    'loudness' : features['loudness'],
+    'mode' : features['mode'],
+    'speechiness' : features['speechiness'],
+    'acousticness' : features['acousticness'],
+    'instrumentalness' : features['instrumentalness'],
+    'liveness' : features['liveness'],
+    'valence' : features['valence'],
+    'tempo' : features['tempo'],
+    }
+    return song_features
+
+def get_song_data(songid):
+    data = spotify.track(songid)
+
+    song_data = {
+    'song name' : data['name'],
+    'album name': data['album']['name'],
+    'artist name' : data['artists'][0]['name'],
+    'artist id' : data['artists'][0]['id'],
+    'song release_date' : data['album']['release_date'],
+    'song length' : data['duration_ms'],
+    'song popularity' : data['popularity'],
+    }
+    song_data['song genres'] = get_song_genre(song_data['artist id']),
+
+    return song_data
+
 def get_playlist(id): #extract and distribute info from a playlist to helper functions
     #complete for right now
 
-    
     playlist = spotify.playlist(id)
     
     playlist_name = playlist['name']#playlist name
@@ -71,7 +86,27 @@ def get_playlist(id): #extract and distribute info from a playlist to helper fun
     
     #creating a list of all the songs in the playlist
     songs = [x['track'] for x in all_tracks]
+    songids = [x['id'] for x in songs]
 
-    return playlist_name, songs, user
+    return playlist_name, songids, user  
+
+def to_csv(dictionaries, headers,names):
+    
+    playlist_name = names[0]
+    username = names[1]
+    try:
+        os.mkdir(username)
+    except(FileExistsError):
+        pass
+    filename = username+'/'+playlist_name+'.csv'
+    with open(filename, 'w') as data:
+        for x in headers:
+            data.write(x+',')
+        data.write('\n')
+
+        for dict in dictionaries:
+            for key in dict:
+                data.write(f'{dict[key]} ,')
+            data.write('\n')
 
 

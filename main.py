@@ -8,8 +8,7 @@ if len(arguments) > 1:
 else:
     raise ValueError('Incorrect number of inputs')
 
-#'spotify:playlist:6q3k05ivbimSgEWvWnSStd'
-
 playlist_name, tracks, user = get_playlist(playlist_id)
-get_songs(playlist_name, tracks, user)
+song_dict, head, names = song_information(playlist_name, tracks, user)
 
+to_csv(song_dict,head,names)
