@@ -9,7 +9,7 @@ spotify = spotipy.Spotify(auth_manager=SpotifyClientCredentials())
 def song_information(playlistname, playlistsongids, playlistuser): #evaluate songs from a list of songs
     #complete for now
 
-    username = playlistuser['display_name']
+    username = playlistuser['display_name'].replace(' ', '')
     headers = []
     songdicts = []
 
@@ -31,7 +31,13 @@ def get_song_genre(artist_id): #getting the genre of a song based on artist id
     #complete for right now
     try:
         artist = spotify.artist(artist_id)#search for artist based on id to get exact result
-        return artist['genres']
+        genres = artist['genres']
+        genrestr = '('
+        for a in genres:
+            genrestr += (a + ';')
+        genrestr = genrestr[:-1]
+        genrestr += ')'
+        return genrestr
     except(AttributeError):
         pass
 
@@ -58,15 +64,15 @@ def get_song_data(songid):
     data = spotify.track(songid)
 
     song_data = {
-    'song name' : data['name'],
-    'album name': data['album']['name'],
-    'artist name' : data['artists'][0]['name'],
-    'artist id' : data['artists'][0]['id'],
-    'song release_date' : data['album']['release_date'],
-    'song length' : data['duration_ms'],
-    'song popularity' : data['popularity'],
+    'song_name' : data['name'],
+    'album_name': data['album']['name'],
+    'artist_name' : data['artists'][0]['name'],
+    'artist_id' : data['artists'][0]['id'],
+    'song_release_date' : data['album']['release_date'],
+    'song_length' : data['duration_ms'],
+    'song_popularity' : data['popularity'],
     }
-    song_data['song genres'] = get_song_genre(song_data['artist id']),
+    song_data['song_genres'] = get_song_genre(song_data['artist_id'])
 
     return song_data
 
@@ -108,5 +114,6 @@ def to_csv(dictionaries, headers,names):
             for key in dict:
                 data.write(f'{dict[key]} ,')
             data.write('\n')
+    
 
 
