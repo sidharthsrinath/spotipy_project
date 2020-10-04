@@ -1,7 +1,11 @@
 import spotipy
+from spotipy import util
 import sys
-from spotipy.oauth2 import SpotifyClientCredentials
+from spotipy.oauth2 import SpotifyClientCredentials, SpotifyOAuth
 import os
+import pandas as pd
+
+scope = 'playlist-modify-private'
 
 spotify = spotipy.Spotify(auth_manager=SpotifyClientCredentials())
 
@@ -79,6 +83,7 @@ def get_song_data(songid):
     'song_release_date' : data['album']['release_date'],
     'song_length' : data['duration_ms'],
     'song_popularity' : data['popularity'],
+    'song_id' : songid,
     }
     # song_data['song_genres'] = get_song_genre(song_data['artist_id'])
 
@@ -115,6 +120,26 @@ def get_playlist(id): #extract and distribute info from a playlist to helper fun
     print(f'Revieved Playlist Info for playlist {id}')
     return playlist_name, songids, user , local_songs 
 
+def make_playlists(df, username):
+
+    scope = 'playlist-modify-private'
+    token= util.prompt_for_user_token(username,scope) 
+    sp_playlist = spotipy.Spotify(auth=token)
+
+    playlist_1 = df[df['KMeans']==0] #low energy
+    playlist_2 = df[df['KMeans']==1] #high energy
+
+    id0 = list(playlist_1['song_id']) #low energy
+    id1 = list(playlist_2['song_id']) #high energy
+
+    high_energy = sp_playlist.user_playlist_create(user=username,
+                                           name="Radiohead :)")
+    low_energy = sp_playlist.user_playlist_create(user=username,
+                                            name="Radiohead :(")
+
+    spotify.user_playlist_add_tracks(user = username,playlist_id= low_energy['id'],tracks = id0)
+    spotify.user_playlist_add_tracks(user = username,playlist_id= high_energy['id'],tracks = id1)
+
 
 def to_csv(dictionaries, headers,names):
     #∆ - option+J - special delimiter
@@ -136,6 +161,4 @@ def to_csv(dictionaries, headers,names):
                 data.write(f'{dict[key]} ∆')
             data.write('\n')
     print(f'{filename} has been written')
-    
-
 

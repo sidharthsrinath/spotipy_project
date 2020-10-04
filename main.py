@@ -13,11 +13,19 @@ else:
 
 # #data extraction: Step 1
 playlist_name, tracks, user, local_tracks = get_playlist(playlist_id)
-song_dict, head, names = song_information(playlist_name, tracks, user)
-to_csv(song_dict,head,names)
-data_dir = os.path.join(os.getcwd(), names[1],names[0]+'.csv')
+# song_dict, head, names = song_information(playlist_name, tracks, user)
+# to_csv(song_dict,head,names)
+# data_dir = os.path.join(os.getcwd(), names[1],names[0]+'.csv')
 
 #data prep: Step 2
+data_dir = '/Users/sidharthsrinath/Documents/VSCode/Projects/spotipy/SidharthSrinath/🍃 🎸 ⚡️.csv'
 df = read_df(data_dir)
-print(df.head())
+cluster_data, feats = prep(data_dir)
+
+#data clustering: Step 3
+clusters = KMeansCluster(cluster_data, 2)
+
+#data plotting: Step 4
+visualize(clusters, df, data_dir, user)
+
 
