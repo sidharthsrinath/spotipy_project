@@ -13,19 +13,28 @@ else:
 
 # #data extraction: Step 1
 playlist_name, tracks, user, local_tracks = get_playlist(playlist_id)
-# song_dict, head, names = song_information(playlist_name, tracks, user)
-# to_csv(song_dict,head,names)
-# data_dir = os.path.join(os.getcwd(), names[1],names[0]+'.csv')
+userid = user['uri']
+song_dict, head, names = song_information(playlist_name, tracks, user)
+to_csv(song_dict,head,names)
+data_dir = os.path.join(os.getcwd(), names[1],names[0]+'.csv')
 
 #data prep: Step 2
-data_dir = '/Users/sidharthsrinath/Documents/VSCode/Projects/spotipy/SidharthSrinath/🍃 🎸 ⚡️.csv'
+# data_dir = '/Users/sidharthsrinath/Documents/VSCode/Projects/spotipy/SidharthSrinath/🍃 🎸 ⚡️.csv'
 df = read_df(data_dir)
 cluster_data, feats = prep(data_dir)
 
 #data clustering: Step 3
 clusters = KMeansCluster(cluster_data, 2)
 
+
+creds = {
+    'username' : userid, 
+    'client_id' : '99562b17e8964b2fb7da569cf0c2da1b',
+    'client_secret' : '5de3883fb0e3412c9b732301aab01b0e',
+    'redirect_uri' : 'https://www.google.com/'
+}
+
 #data plotting: Step 4
-visualize(clusters, df, data_dir, user)
+visualize(clusters, df, data_dir, creds, playlist_name) 
 
 

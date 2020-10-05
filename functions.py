@@ -4,6 +4,8 @@ import sys
 from spotipy.oauth2 import SpotifyClientCredentials, SpotifyOAuth
 import os
 import pandas as pd
+from authtest import *
+from authorizer import*
 
 scope = 'playlist-modify-private'
 
@@ -94,7 +96,6 @@ def get_song_data(songid):
 
 def get_playlist(id): #extract and distribute info from a playlist to helper functions
     #complete for right now
-
     playlist = spotify.playlist(id) #returns a dict
 
     playlist_name = playlist['name']#playlist name
@@ -120,27 +121,6 @@ def get_playlist(id): #extract and distribute info from a playlist to helper fun
     print(f'Revieved Playlist Info for playlist {id}')
     return playlist_name, songids, user , local_songs 
 
-def make_playlists(df, username):
-
-    scope = 'playlist-modify-private'
-    token= util.prompt_for_user_token(username,scope) 
-    sp_playlist = spotipy.Spotify(auth=token)
-
-    playlist_1 = df[df['KMeans']==0] #low energy
-    playlist_2 = df[df['KMeans']==1] #high energy
-
-    id0 = list(playlist_1['song_id']) #low energy
-    id1 = list(playlist_2['song_id']) #high energy
-
-    high_energy = sp_playlist.user_playlist_create(user=username,
-                                           name="Radiohead :)")
-    low_energy = sp_playlist.user_playlist_create(user=username,
-                                            name="Radiohead :(")
-
-    spotify.user_playlist_add_tracks(user = username,playlist_id= low_energy['id'],tracks = id0)
-    spotify.user_playlist_add_tracks(user = username,playlist_id= high_energy['id'],tracks = id1)
-
-
 def to_csv(dictionaries, headers,names):
     #∆ - option+J - special delimiter
     playlist_name = names[0]
@@ -161,4 +141,66 @@ def to_csv(dictionaries, headers,names):
                 data.write(f'{dict[key]} ∆')
             data.write('\n')
     print(f'{filename} has been written')
+
+
+def make_playlist(username, client_id, client_secret, redirect_uri, df, playlist_name):
+    try:
+        token = util.prompt_for_user_token(username,
+                            client_id=client_id,
+                            client_secret=client_secret,
+                            redirect_uri=redirect_uri)
+    except:
+        print('exception')
+        os.remove(f".cache-{username}")
+        token = util.prompt_for_user_token(username,
+                            scope = 'playlist-modify-public',
+                            client_id=client_id,
+                            client_secret=client_secret,
+                            redirect_uri=redirect_uri)
+    sp = spotipy.Spotify(auth = token)
+
+
+    hi_name = 'High Energy:' + playlist_name
+    lo_name = 'Low Energy' + playlist_name
+    username = username.replace('spotify:user:','')
+
+    high_energy = sp.user_playlist_create(user=username,
+                                           name=hi_name,
+                                           description= 'High energy songs from' + playlist_name)
+    print('Created High Energy Playlist')
+    low_energy = sp.user_playlist_create(user=username,
+                                            name=lo_name, 
+                                            description = 'Low energy songs from' + playlist_name)
+    print('Created Low Energy Playlist')
+
+    playlist_1 = df[df['KMeans']==0] #low energy
+    playlist_2 = df[df['KMeans']==1] #high energy
+
+    id0 = list(playlist_1['song_id']) #low energy
+    id1 = list(playlist_2['song_id']) #high energy
+
+    for x in id0:
+        thisid = x
+        thisidN = thisid.strip()
+        sp.user_playlist_add_tracks(user = username,playlist_id= low_energy['id'],tracks = [thisidN])
+    print('Added Songs to Low Energy Playlist')
+    for x in id1:
+        thisid = x
+        thisidN = thisid.strip()
+        sp.user_playlist_add_tracks(user = username,playlist_id= high_energy['id'],tracks = [thisidN])
+    print('Added Songs to Low Energy Playlist')
+
+def change_scope(filename):
+    str = ''
+    with open(filename,'r') as file:
+        str = file.readlines()
+    print(str)
+
+change_scope('/Users/sidharthsrinath/Documents/VSCode/Projects/spotipy/.cache-spotify:user:226bsgo33f4ltd5dqkc2slf6i')
+# client = authorize_token('226bsgo33f4ltd5dqkc2slf6i',
+#                         'playlist-modify-public',
+#                         '99562b17e8964b2fb7da569cf0c2da1b',
+#                         '5de3883fb0e3412c9b732301aab01b0e',
+#                         'https://www.google.com/')
+
 

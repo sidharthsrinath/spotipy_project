@@ -34,7 +34,7 @@ def KMeansCluster(data, k):
     #print(clustering.labels_)
     return clustering
 
-def visualize(clusters, df,data_dir, username):
+def visualize(clusters, df,data_dir, creds, playlist_name):
     df['KMeans'] = clusters.labels_
 
     print(df.groupby(['KMeans']).mean())
@@ -56,6 +56,12 @@ def visualize(clusters, df,data_dir, username):
     path = os.path.dirname(data_dir)
     # plt.savefig(os.path.join(path,'pltfig.png'))
     # plt.show()
+    
 
-    make_playlists(df, username)
+    make_playlist(creds['username'],
+                creds['client_id'],
+                creds['client_secret'],
+                creds['redirect_uri'],
+                df, 
+                playlist_name)
 

@@ -66,8 +66,8 @@ class SpotifyAPI(object):
             return False
 
 
-client = SpotifyAPI(client_id,client_secret)
-a = client.auth()
-print(a)
+# client = SpotifyAPI(client_id,client_secret)
+# a = client.auth()
+# print(a)
 
-print(client.access_token)
+# print(client.access_token)
