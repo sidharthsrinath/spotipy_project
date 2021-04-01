@@ -12,6 +12,8 @@ from sklearn.preprocessing import MinMaxScaler, LabelEncoder
 from functions import *
 import os
 
+from retry import *
+
 def read_df(filename):
     return pd.DataFrame(pd.read_csv(filename, sep = '∆', engine = 'python')) #data based on the csv file it reads
 
@@ -54,11 +56,11 @@ def visualize(clusters, df,data_dir, creds, playlist_name):
 
     
     path = os.path.dirname(data_dir)
-    # plt.savefig(os.path.join(path,'pltfig.png'))
-    # plt.show()
+    plt.savefig(os.path.join(path,'pltfig.png'))
+    plt.show()
     
 
-    make_playlist(creds['username'],
+    make_playlist_final(creds['username'],
                 creds['client_id'],
                 creds['client_secret'],
                 creds['redirect_uri'],

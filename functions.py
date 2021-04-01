@@ -7,9 +7,10 @@ import pandas as pd
 from authtest import *
 from authorizer import*
 
-scope = 'playlist-modify-private'
-
-spotify = spotipy.Spotify(auth_manager=SpotifyClientCredentials())
+scope = "user-library-read-write"
+SPOTIFY_CLIENT_ID="393026174b4d48d49bd6e371412c8a59"
+SPOTIFY_CLIENT_SECRET="80e439830b084c6da52058c955d0da2f"
+spotify = spotipy.Spotify(auth_manager=SpotifyClientCredentials(client_id=SPOTIFY_CLIENT_ID, client_secret=SPOTIFY_CLIENT_SECRET))
 
 def song_information(playlistname, playlistsongids, playlistuser): #evaluate songs from a list of songs
     #complete for now
@@ -144,51 +145,40 @@ def to_csv(dictionaries, headers,names):
 
 
 def make_playlist(username, client_id, client_secret, redirect_uri, df, playlist_name):
-    try:
-        token = util.prompt_for_user_token(username,
-                            client_id=client_id,
-                            client_secret=client_secret,
-                            redirect_uri=redirect_uri)
-    except:
-        print('exception')
-        os.remove(f".cache-{username}")
-        token = util.prompt_for_user_token(username,
-                            scope = 'playlist-modify-public',
-                            client_id=client_id,
-                            client_secret=client_secret,
-                            redirect_uri=redirect_uri)
-    sp = spotipy.Spotify(auth = token)
 
+	#Credentials to access to  the Spotify User's Playlist, Favorite Songs, etc. 
+	token = util.prompt_for_user_token(username,scope,client_id,client_secret,redirect_uri) 
+	sp = spotipy.Spotify(auth=token)
 
-    hi_name = 'High Energy:' + playlist_name
-    lo_name = 'Low Energy' + playlist_name
-    username = username.replace('spotify:user:','')
+	hi_name = 'High Energy: ' + playlist_name
+	lo_name = 'Low Energy: ' + playlist_name
+	username = username.replace('spotify:user:','')
 
-    high_energy = sp.user_playlist_create(user=username,
-                                           name=hi_name,
-                                           description= 'High energy songs from' + playlist_name)
-    print('Created High Energy Playlist')
-    low_energy = sp.user_playlist_create(user=username,
-                                            name=lo_name, 
-                                            description = 'Low energy songs from' + playlist_name)
-    print('Created Low Energy Playlist')
+	high_energy = spotify.user_playlist_create(user=username,
+											name=hi_name,
+											description= 'High energy songs from' + playlist_name)
+	print('Created High Energy Playlist')
+	low_energy = spotify.user_playlist_create(user=username,
+											name=lo_name, 
+											description = 'Low energy songs from' + playlist_name)
+	print('Created Low Energy Playlist')
 
-    playlist_1 = df[df['KMeans']==0] #low energy
-    playlist_2 = df[df['KMeans']==1] #high energy
+	playlist_1 = df[df['KMeans']==0] #low energy
+	playlist_2 = df[df['KMeans']==1] #high energy
 
-    id0 = list(playlist_1['song_id']) #low energy
-    id1 = list(playlist_2['song_id']) #high energy
+	id0 = list(playlist_1['song_id']) #low energy
+	id1 = list(playlist_2['song_id']) #high energy
 
-    for x in id0:
-        thisid = x
-        thisidN = thisid.strip()
-        sp.user_playlist_add_tracks(user = username,playlist_id= low_energy['id'],tracks = [thisidN])
-    print('Added Songs to Low Energy Playlist')
-    for x in id1:
-        thisid = x
-        thisidN = thisid.strip()
-        sp.user_playlist_add_tracks(user = username,playlist_id= high_energy['id'],tracks = [thisidN])
-    print('Added Songs to Low Energy Playlist')
+	for x in id0:
+		thisid = x
+		thisidN = thisid.strip()
+		spotify.user_playlist_add_tracks(user = username,playlist_id= low_energy['id'],tracks = [thisidN])
+	print('Added Songs to Low Energy Playlist')
+	for x in id1:
+		thisid = x
+		thisidN = thisid.strip()
+		spotify.user_playlist_add_tracks(user = username,playlist_id= high_energy['id'],tracks = [thisidN])
+	print('Added Songs to Low Energy Playlist')
 
 def change_scope(filename):
     str = ''
@@ -196,11 +186,9 @@ def change_scope(filename):
         str = file.readlines()
     print(str)
 
-change_scope('/Users/sidharthsrinath/Documents/VSCode/Projects/spotipy/.cache-spotify:user:226bsgo33f4ltd5dqkc2slf6i')
+# change_scope('/Users/sidharthsrinath/Documents/VSCode/Projects/spotipy/.cache-spotify:user:226bsgo33f4ltd5dqkc2slf6i')
 # client = authorize_token('226bsgo33f4ltd5dqkc2slf6i',
 #                         'playlist-modify-public',
 #                         '99562b17e8964b2fb7da569cf0c2da1b',
 #                         '5de3883fb0e3412c9b732301aab01b0e',
 #                         'https://www.google.com/')
-
-

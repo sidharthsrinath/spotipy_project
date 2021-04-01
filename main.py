@@ -11,15 +11,18 @@ if len(arguments) > 1:
 else:
     raise ValueError('Incorrect number of inputs')
 
-# #data extraction: Step 1
+
+# playlist=spotify.playlist(playlist_id)
+
+#data extraction: Step 1
 playlist_name, tracks, user, local_tracks = get_playlist(playlist_id)
 userid = user['uri']
+print(userid)
 song_dict, head, names = song_information(playlist_name, tracks, user)
 to_csv(song_dict,head,names)
 data_dir = os.path.join(os.getcwd(), names[1],names[0]+'.csv')
 
 #data prep: Step 2
-# data_dir = '/Users/sidharthsrinath/Documents/VSCode/Projects/spotipy/SidharthSrinath/🍃 🎸 ⚡️.csv'
 df = read_df(data_dir)
 cluster_data, feats = prep(data_dir)
 
@@ -29,8 +32,8 @@ clusters = KMeansCluster(cluster_data, 2)
 
 creds = {
     'username' : userid, 
-    'client_id' : '99562b17e8964b2fb7da569cf0c2da1b',
-    'client_secret' : '5de3883fb0e3412c9b732301aab01b0e',
+    'client_id' : os.environ['SPOTIPY_CLIENT_ID'],
+    'client_secret' : os.environ['SPOTIPY_CLIENT_SECRET'],
     'redirect_uri' : 'https://www.google.com/'
 }
 
